@@ -21,7 +21,7 @@ jobs:
         run: npm install -g pnpm
 
       - name: Add pnpm to PATH
-        run: echo "::add-path::$(npm bin -g)"
+        run: echo "::add-path::$HOME/.npm-packages/bin"
 
       - name: Install dependencies
         run: pnpm install
