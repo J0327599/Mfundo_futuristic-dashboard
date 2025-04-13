@@ -11,13 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-          registry-url: https://registry.npmjs.org
-
       - name: Update Node.js
         run: npm install -g npm@latest
 
@@ -30,11 +23,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build and export
-        run: pnpm run build && pnpm run export
-
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: out # The folder where your static files are generated
           branch: gh-pages
+
+      - name: Build and export
+        run: pnpm run build && pnpm run export
