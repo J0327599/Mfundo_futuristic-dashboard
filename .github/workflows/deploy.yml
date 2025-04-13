@@ -16,6 +16,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'pnpm'
+          registry-url: https://registry.npmjs.org
 
       - name: Update Node.js
         run: npm install -g npm@latest
@@ -27,7 +28,7 @@ jobs:
         run: echo "::add-path::$HOME/.npm-packages/bin"
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build and export
         run: pnpm run build && pnpm run export
