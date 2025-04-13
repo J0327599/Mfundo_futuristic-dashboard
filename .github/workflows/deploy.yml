@@ -8,26 +8,47 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Allow the action to write to the gh-pages branch
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4 # Use latest checkout action
 
-      - name: Update Node.js
-        run: npm install -g npm@latest
+      - name: Set up Node.js
+        uses: actions/setup-node@v4 # Use latest setup-node action
+        with:
+          node-version: '20'
+          # Remove cache setting here, let pnpm/action-setup handle it
 
-      - name: Install pnpm
-        run: npm install -g pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3 # Use latest pnpm setup action
+        with:
+          version: 8 # Specify pnpm version (adjust if needed)
+          run_install: false # Don't run install automatically yet
 
-      - name: Add pnpm to PATH
-        run: echo "::add-path::$HOME/.npm-packages/bin"
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - uses: actions/cache@v4 # Use latest cache action
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: out # The folder where your static files are generated
-          branch: gh-pages
-
       - name: Build and export
         run: pnpm run build && pnpm run export
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4.6.3 # Use specific version
+        with:
+          folder: out # The folder the action should deploy.
+          branch: gh-pages # The branch the action should deploy to.
+          token: ${{ secrets.GITHUB_TOKEN }} # Use the default GITHUB_TOKEN
