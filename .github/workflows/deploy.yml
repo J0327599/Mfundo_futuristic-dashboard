@@ -13,32 +13,26 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4 # Use latest checkout action
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4 # Use latest setup-node action
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
-          # Remove cache setting here, let pnpm/action-setup handle it
+          # Use corepack to handle pnpm - it might read packageManager from package.json
+          # cache: 'pnpm' # Let corepack handle this potentially
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3 # Use latest pnpm setup action
-        with:
-          version: 8 # Specify pnpm version (adjust if needed)
-          run_install: false # Don't run install automatically yet
+      # Enable corepack (Node's built-in package manager manager)
+      - name: Enable Corepack
+        run: corepack enable pnpm
 
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      # Verify pnpm is available via corepack
+      - name: Check pnpm version
+        run: pnpm --version
 
-      - uses: actions/cache@v4 # Use latest cache action
-        name: Setup pnpm cache
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+      # Explicitly install pnpm globally if corepack alone doesn't work
+      # - name: Install pnpm globally (fallback)
+      #   run: npm install -g pnpm@8 # Or your desired version
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -47,8 +41,8 @@ jobs:
         run: pnpm run build && pnpm run export
 
       - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4.6.3 # Use specific version
+        uses: JamesIves/github-pages-deploy-action@v4.6.3
         with:
-          folder: out # The folder the action should deploy.
-          branch: gh-pages # The branch the action should deploy to.
-          token: ${{ secrets.GITHUB_TOKEN }} # Use the default GITHUB_TOKEN
+          folder: out
+          branch: gh-pages
+          token: ${{ secrets.GITHUB_TOKEN }}
